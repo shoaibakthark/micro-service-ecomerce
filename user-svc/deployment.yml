@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user
-          image: njl010docker/user:latest # Replace with your Docker image
+          image: shoaib2311/user:latest # Replace with your Docker image
           ports:
             - containerPort: 3000
 
