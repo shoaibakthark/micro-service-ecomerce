@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order-svc
-          image: njl010docker/order:latest # Replace with your Docker image
+          image: shoaib2311/order:latest # Replace with your Docker image
           ports:
             - containerPort: 3000
 
