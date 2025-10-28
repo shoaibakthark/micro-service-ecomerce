@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: product
-          image: njl010docker/product:latest # Replace with your Docker image
+          image: shoaib2311/product:latest # Replace with your Docker image
           ports:
             - containerPort: 3000
 
