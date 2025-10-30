@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        KUBECONFIG = '/tmp/kubeconfig'
+    }
+
+    stages {
+
+        stage('Fetch kubeconfig from remote server') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'remote-server-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    script {
+                        // Fetch kubeconfig from remote Kubernetes master
+                        sh '''
+                            mkdir -p /tmp
+                            scp -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@13.201.75.250:/home/ubuntu/.kube/config /tmp/kubeconfig
+                            chmod 600 /tmp/kubeconfig
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Clone Git Repository') {
+            steps {
+                git url: 'https://github.com/shoaibakthark/micro-service-ecomerce.git', branch: 'main'
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                script {
+                    sh '''
+                        docker build -f order-svc/dockerfile -t shoaib2311/order:latest order-svc/
+                        docker build -f payment-svc/dockerfile -t shoaib2311/payment:latest payment-svc/
+                        docker build -f user-svc/dockerfile -t shoaib2311/user:latest user-svc/
+                        docker build -f product-svc/dockerfile -t shoaib2311/product:latest product-svc/
+                    '''
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    script {
+                        sh '''
+                            echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Images') {
+            steps {
+                script {
+                    sh '''
+                        docker push shoaib2311/order:latest
+                        docker push shoaib2311/payment:latest
+                        docker push shoaib2311/user:latest
+                        docker push shoaib2311/product:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    sh '''
+                        kubectl apply -f order-svc/deployment.yml
+                        kubectl apply -f order-svc/service.yml
+                        kubectl apply -f payment-svc/deployment.yml
+                        kubectl apply -f payment-svc/service.yml
+                        kubectl apply -f product-svc/deployment.yml
+                        kubectl apply -f product-svc/service.yml
+                        kubectl apply -f user-svc/deployment.yml
+                        kubectl apply -f user-svc/service.yml
+                        kubectl apply -f ingress.yml
+                    '''
+                }
+            }
+        }
+    }
+}
