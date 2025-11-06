@@ -1,21 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment
+  name: payment-svc
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payment
+      app: payment-svc
   template:
     metadata:
       labels:
-        app: payment
+        app: payment-svc
     spec:
       containers:
-        - name: payment
-          image: shoaib2311/payment:latest # Replace with your Docker image
-          ports:
-            - containerPort: 3000
-
-
+      - name: payment-svc
+        image: shoaib2311/payment:latest
+        ports:
+        - containerPort: 8080
